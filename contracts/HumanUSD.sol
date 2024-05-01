@@ -14,6 +14,8 @@ import "./interfaces/IHMToken.sol";
 import "./interfaces/IStaking.sol";
 
 contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable {
+    address public addressUSDT;
+
     IHMToken public hmToken;
     IEscrowFactory public escrowFactory;
     IStaking public staking;
@@ -28,6 +30,7 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable {
     }
 
     function initialize(
+        address _addressUSDT,
         address _hmToken,
         address _escrowFactory,
         address _staking,
@@ -37,6 +40,7 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable {
         __ERC20_init_unchained("HumanUSD", "HUSD");
 
         __HumanUSD_init_unchained(
+            _addressUSDT,
             _hmToken,
             _escrowFactory,
             _staking,
@@ -45,11 +49,15 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable {
     }
 
     function __HumanUSD_init_unchained(
+        address _addressUSDT,
         address _hmToken,
         address _escrowFactory,
         address _staking,
         uint256 _tokensRequiredForCampaign
     ) internal initializer {
+        require(_addressUSDT != address(0), "Invalid USDT address");
+        addressUSDT = _addressUSDT;
+
         require(_hmToken != address(0), "Invalid HMT address");
         hmToken = IHMToken(_hmToken);
 
@@ -81,6 +89,8 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable {
     }
 
     function mint(address to, uint256 amount) public onlyOwner {
+        _safeTransferFrom(addressUSDT, _msgSender(), address(this), amount);
+
         _mint(to, amount);
 
         tokensRemainingForCampaign = tokensRemainingForCampaign + amount;
