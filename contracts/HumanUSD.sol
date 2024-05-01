@@ -64,6 +64,11 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable {
         lastCampaignId = 0;
     }
 
+    function setCampaignManager(address _campaignManager) external onlyOwner {
+        require(_campaignManager != address(0), "Invalid campaign manager");
+        campaignManager = ICampaignManager(_campaignManager);
+    }
+
     function stakeHMT(uint256 amountToStake) external onlyOwner {
         _safeTransferFrom(
             address(hmToken),
