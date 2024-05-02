@@ -7,72 +7,57 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
+import "./interfaces/ICampaignManager.sol";
 import "./interfaces/IEscrow.sol";
 import "./interfaces/IEscrowFactory.sol";
 import "./interfaces/IHMToken.sol";
 import "./interfaces/IStaking.sol";
 
 contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable {
+    address public addressUSDT;
+
     IHMToken public hmToken;
     IEscrowFactory public escrowFactory;
     IStaking public staking;
+    ICampaignManager public campaignManager;
+    uint256 public lastCampaignId;
 
-    struct CampaignConfiguration {
-        address recordingOracle;
-        address reputationOracle;
-        address exchangeOracle;
-        uint8 recordingOracleFeePercentage;
-        uint8 reputationOracleFeePercentage;
-        uint8 exchangeOracleFeePercentage;
-        string manifestURL;
-        string manifestHash;
-    }
-
-    /***
-     * @dev This is just for the demo purpose.
-     * Ideally, the campaign configuration should be specified by the user
-     */
-    CampaignConfiguration public campaignConfiguration;
-
-    struct CampaignTier {
-        address token;
-        uint256 amount;
-    }
-
-    CampaignTier[] public campaignTiers;
-
-    uint256 public campaignId;
+    uint256 public tokensRequiredForCampaign;
+    uint256 public tokensRemainingForCampaign;
 
     constructor() {
         _disableInitializers();
     }
 
     function initialize(
+        address _addressUSDT,
         address _hmToken,
         address _escrowFactory,
         address _staking,
-        CampaignConfiguration memory _campaignConfiguration,
-        CampaignTier[] memory _campaignTiers
+        uint256 _tokensRequiredForCampaign
     ) external payable virtual initializer {
         __Ownable_init_unchained(_msgSender());
         __ERC20_init_unchained("HumanUSD", "HUSD");
 
         __HumanUSD_init_unchained(
+            _addressUSDT,
             _hmToken,
             _escrowFactory,
             _staking,
-            _campaignConfiguration,
-            _campaignTiers
+            _tokensRequiredForCampaign
         );
     }
 
     function __HumanUSD_init_unchained(
+        address _addressUSDT,
         address _hmToken,
         address _escrowFactory,
         address _staking,
-        CampaignConfiguration memory _campaignConfiguration,
-        CampaignTier[] memory _campaignTiers
+        uint256 _tokensRequiredForCampaign
     ) internal initializer {
+        require(_addressUSDT != address(0), "Invalid USDT address");
+        addressUSDT = _addressUSDT;
+
         require(_hmToken != address(0), "Invalid HMT address");
         hmToken = IHMToken(_hmToken);
 
@@ -82,14 +67,17 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable {
         require(_staking != address(0), "Invalid staking address");
         staking = IStaking(_staking);
 
-        campaignConfiguration = _campaignConfiguration;
-
-        for (uint256 i = 0; i < _campaignTiers.length; i++) {
-            campaignTiers.push(_campaignTiers[i]);
-        }
+        tokensRequiredForCampaign = _tokensRequiredForCampaign;
+        tokensRemainingForCampaign = 0;
+        lastCampaignId = 0;
     }
 
-    function stakeHMT(uint256 amountToStake) public onlyOwner {
+    function setCampaignManager(address _campaignManager) external onlyOwner {
+        require(_campaignManager != address(0), "Invalid campaign manager");
+        campaignManager = ICampaignManager(_campaignManager);
+    }
+
+    function stakeHMT(uint256 amountToStake) external onlyOwner {
         _safeTransferFrom(
             address(hmToken),
             _msgSender(),
@@ -100,56 +88,66 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable {
         staking.stake(amountToStake);
     }
 
-    function mint(
-        address to,
-        uint256 amount,
-        uint256 campaignTierId
-    ) public onlyOwner {
+    function mint(address to, uint256 amount) public onlyOwner {
+        _safeTransferFrom(addressUSDT, _msgSender(), address(this), amount);
+
         _mint(to, amount);
-        _createCampaign(campaignTierId);
+
+        tokensRemainingForCampaign = tokensRemainingForCampaign + amount;
+        while (tokensRemainingForCampaign >= tokensRequiredForCampaign) {
+            _createCampaign();
+            tokensRemainingForCampaign =
+                tokensRemainingForCampaign -
+                tokensRequiredForCampaign;
+        }
     }
 
-    function _createCampaign(uint256 campaignTierId) internal {
-        require(campaignTierId < campaignTiers.length, "Invalid campaign tier");
-        require(staking.hasAvailableStake(address(this)), "No available stake");
-        require(
-            campaignConfiguration.recordingOracle != address(0),
-            "Invalid campaign configuration"
-        );
+    function _createCampaign() internal {
+        (address token, uint256 fundAmount) = campaignManager
+            .getCampaignTierToLaunch();
+        (
+            address recordingOracle,
+            address reputationOracle,
+            address exchangeOracle,
+            uint8 recordingOracleFeePercentage,
+            uint8 reputationOracleFeePercentage,
+            uint8 exchangeOracleFeePercentage,
+            string memory manifestURL,
+            string memory manifestHash
+        ) = campaignManager.campaignData();
 
-        campaignId = campaignId + 1;
+        if (IERC20(token).balanceOf(address(this)) < fundAmount) {
+            // Silently fail if we don't have enough tokens to fund the campaign
+            return;
+        }
 
-        CampaignTier memory campaignTier = campaignTiers[campaignTierId];
+        lastCampaignId = lastCampaignId + 1;
+
         address[] memory trustedHandlers = new address[](1);
-        trustedHandlers[0] = campaignConfiguration.recordingOracle;
-        string memory jobRequestId = Strings.toString(campaignId);
+        trustedHandlers[0] = address(this);
+        string memory jobRequestId = Strings.toString(lastCampaignId);
 
         // Create escrow
         address escrow = escrowFactory.createEscrow(
-            campaignTier.token,
+            token,
             trustedHandlers,
             jobRequestId
         );
 
         // Setup escrow
         IEscrow(escrow).setup(
-            campaignConfiguration.reputationOracle,
-            campaignConfiguration.recordingOracle,
-            campaignConfiguration.exchangeOracle,
-            campaignConfiguration.reputationOracleFeePercentage,
-            campaignConfiguration.recordingOracleFeePercentage,
-            campaignConfiguration.exchangeOracleFeePercentage,
-            campaignConfiguration.manifestURL,
-            campaignConfiguration.manifestHash
+            reputationOracle,
+            recordingOracle,
+            exchangeOracle,
+            reputationOracleFeePercentage,
+            recordingOracleFeePercentage,
+            exchangeOracleFeePercentage,
+            manifestURL,
+            manifestHash
         );
 
         // Fund escrow
-        _safeTransferFrom(
-            campaignTier.token,
-            _msgSender(),
-            escrow,
-            campaignTier.amount
-        );
+        _safeTransferFrom(token, address(this), escrow, fundAmount);
     }
 
     function _safeTransferFrom(
