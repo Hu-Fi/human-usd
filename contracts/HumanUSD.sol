@@ -90,11 +90,22 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable, UUPSUpgradeable {
         _safeTransferFrom(addressUSDT, _msgSender(), address(this), amount);
 
         _mint(to, amount);
+    }
+
+    function mint(
+        address to,
+        uint256 amount,
+        string memory manifestURL,
+        string memory manifestHash
+    ) public onlyOwner {
+        _safeTransferFrom(addressUSDT, _msgSender(), address(this), amount);
+
+        _mint(to, amount);
 
         if (campaignManager != ICampaignManager(address(0))) {
             tokensRemainingForCampaign = tokensRemainingForCampaign + amount;
             while (tokensRemainingForCampaign >= tokensRequiredForCampaign) {
-                _createCampaign();
+                _createCampaign(manifestURL, manifestHash);
                 tokensRemainingForCampaign =
                     tokensRemainingForCampaign -
                     tokensRequiredForCampaign;
@@ -102,7 +113,10 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable, UUPSUpgradeable {
         }
     }
 
-    function _createCampaign() internal {
+    function _createCampaign(
+        string memory manifestURL,
+        string memory manifestHash
+    ) internal {
         (address token, uint256 fundAmount) = campaignManager
             .getCampaignTierToLaunch();
         (
@@ -111,9 +125,7 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable, UUPSUpgradeable {
             address exchangeOracle,
             uint8 recordingOracleFeePercentage,
             uint8 reputationOracleFeePercentage,
-            uint8 exchangeOracleFeePercentage,
-            string memory manifestURL,
-            string memory manifestHash
+            uint8 exchangeOracleFeePercentage
         ) = campaignManager.campaignData();
 
         if (IERC20(token).balanceOf(address(this)) < fundAmount) {
@@ -173,4 +185,6 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable, UUPSUpgradeable {
         uint256 fundAmount,
         address escrow
     );
+
+    uint256[42] private __gap;
 }

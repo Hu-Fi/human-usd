@@ -6,7 +6,6 @@ interface ICampaignManager {
      * @dev Campaign Data
      * Every single stable coin will have its own campaign data,
      * which is used to launch the campaign.
-     * This should be configured only once right after the coin is deployed.
      *
      * recordingOracle: Address of the recording oracle
      * reputationOracle: Address of the reputation oracle
@@ -14,8 +13,6 @@ interface ICampaignManager {
      * recordingOracleFeePercentage: Fee percentage for the recording oracle
      * reputationOracleFeePercentage: Fee percentage for the reputation oracle
      * exchangeOracleFeePercentage: Fee percentage for the exchange oracle
-     * manifestURL: URL of the manifest file
-     * manifestHash: Hash of the manifest file
      */
     struct CampaignData {
         address recordingOracle;
@@ -24,8 +21,6 @@ interface ICampaignManager {
         uint8 recordingOracleFeePercentage;
         uint8 reputationOracleFeePercentage;
         uint8 exchangeOracleFeePercentage;
-        string manifestURL;
-        string manifestHash;
     }
 
     /**
@@ -53,9 +48,7 @@ interface ICampaignManager {
             address exchangeOracle,
             uint8 recordingOracleFeePercentage,
             uint8 reputationOracleFeePercentage,
-            uint8 exchangeOracleFeePercentage,
-            string memory manifestURL,
-            string memory manifestHash
+            uint8 exchangeOracleFeePercentage
         );
 
     function campaignTierCount() external view returns (uint256);
@@ -77,9 +70,7 @@ interface ICampaignManager {
         address _exchangeOracle,
         uint8 _recordingOracleFeePercentage,
         uint8 _reputationOracleFeePercentage,
-        uint8 _exchangeOracleFeePercentage,
-        string memory _manifestURL,
-        string memory _manifestHash
+        uint8 _exchangeOracleFeePercentage
     ) external;
 
     function addCampaignTier(address _token, uint256 _fundAmount) external;

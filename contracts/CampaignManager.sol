@@ -85,15 +85,8 @@ contract CampaignManager is
         address _exchangeOracle,
         uint8 _recordingOracleFeePercentage,
         uint8 _reputationOracleFeePercentage,
-        uint8 _exchangeOracleFeePercentage,
-        string memory _manifestURL,
-        string memory _manifestHash
+        uint8 _exchangeOracleFeePercentage
     ) external override onlyOwner {
-        require(
-            campaignData.recordingOracle == address(0),
-            "CampaignManager: Campaign data already set"
-        );
-
         require(
             _recordingOracle != address(0),
             "CampaignManager: Invalid recording oracle address"
@@ -133,9 +126,7 @@ contract CampaignManager is
             exchangeOracle: _exchangeOracle,
             recordingOracleFeePercentage: _recordingOracleFeePercentage,
             reputationOracleFeePercentage: _reputationOracleFeePercentage,
-            exchangeOracleFeePercentage: _exchangeOracleFeePercentage,
-            manifestURL: _manifestURL,
-            manifestHash: _manifestHash
+            exchangeOracleFeePercentage: _exchangeOracleFeePercentage
         });
 
         emit CampaignDataUpdated(
@@ -144,9 +135,7 @@ contract CampaignManager is
             _exchangeOracle,
             _recordingOracleFeePercentage,
             _reputationOracleFeePercentage,
-            _exchangeOracleFeePercentage,
-            _manifestURL,
-            _manifestHash
+            _exchangeOracleFeePercentage
         );
     }
 
@@ -201,9 +190,7 @@ contract CampaignManager is
         address exchangeOracle,
         uint8 recordingOracleFeePercentage,
         uint8 reputationOracleFeePercentage,
-        uint8 exchangeOracleFeePercentage,
-        string manifestURL,
-        string manifestHash
+        uint8 exchangeOracleFeePercentage
     );
     event CampaignTierAdded(
         uint256 campaignTierId,

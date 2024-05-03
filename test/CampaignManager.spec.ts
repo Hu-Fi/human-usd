@@ -18,9 +18,9 @@ describe("HumanUSD", () => {
   const reputationOracleFee = 5;
   const exchangeOracleFee = 5;
 
-  const manifestURL = "https://example.com/manifest.json";
-  const manifestHash =
-    "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
+  const recordingOracleFeeNew = 10;
+  const reputationOracleFeeNew = 10;
+  const exchangeOracleFeeNew = 10;
 
   const tier1Amount = ethers.parseEther("1");
   const tier2Amount = ethers.parseEther("2");
@@ -60,9 +60,7 @@ describe("HumanUSD", () => {
           await exchangeOracle.getAddress(),
           recordingOracleFee,
           reputationOracleFee,
-          exchangeOracleFee,
-          manifestURL,
-          manifestHash
+          exchangeOracleFee
         )
     ).to.be.revertedWith("Ownable: caller is not the owner");
   });
@@ -74,9 +72,7 @@ describe("HumanUSD", () => {
       await exchangeOracle.getAddress(),
       recordingOracleFee,
       reputationOracleFee,
-      exchangeOracleFee,
-      manifestURL,
-      manifestHash
+      exchangeOracleFee
     );
 
     const campaignData = await campaignManager.campaignData();
@@ -98,23 +94,37 @@ describe("HumanUSD", () => {
     expect(campaignData.exchangeOracleFeePercentage).to.equal(
       exchangeOracleFee.toString()
     );
-    expect(campaignData.manifestURL).to.equal(manifestURL);
-    expect(campaignData.manifestHash).to.equal(manifestHash);
   });
 
-  it("should not be able to set campaign data again", async () => {
-    await expect(
-      campaignManager.setCampaignData(
-        await recordingOracle.getAddress(),
-        await reputationOracle.getAddress(),
-        await exchangeOracle.getAddress(),
-        recordingOracleFee,
-        reputationOracleFee,
-        exchangeOracleFee,
-        manifestURL,
-        manifestHash
-      )
-    ).to.be.revertedWith("CampaignManager: Campaign data already set");
+  it("should be able to set campaign data again", async () => {
+    await campaignManager.setCampaignData(
+      await recordingOracle.getAddress(),
+      await reputationOracle.getAddress(),
+      await exchangeOracle.getAddress(),
+      recordingOracleFeeNew,
+      reputationOracleFeeNew,
+      exchangeOracleFeeNew
+    );
+
+    const campaignData = await campaignManager.campaignData();
+    expect(campaignData.recordingOracle).to.equal(
+      await recordingOracle.getAddress()
+    );
+    expect(campaignData.reputationOracle).to.equal(
+      await reputationOracle.getAddress()
+    );
+    expect(campaignData.exchangeOracle).to.equal(
+      await exchangeOracle.getAddress()
+    );
+    expect(campaignData.recordingOracleFeePercentage).to.equal(
+      recordingOracleFeeNew.toString()
+    );
+    expect(campaignData.reputationOracleFeePercentage).to.equal(
+      reputationOracleFeeNew.toString()
+    );
+    expect(campaignData.exchangeOracleFeePercentage).to.equal(
+      exchangeOracleFeeNew.toString()
+    );
   });
 
   it("should not return campaign to launch without campaign tier", async () => {

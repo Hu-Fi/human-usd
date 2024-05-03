@@ -1,0 +1,169 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_fundAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "addCampaignTier",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "campaignData",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "recordingOracle",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "reputationOracle",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "exchangeOracle",
+        "type": "address"
+      },
+      {
+        "internalType": "uint8",
+        "name": "recordingOracleFeePercentage",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "reputationOracleFeePercentage",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "exchangeOracleFeePercentage",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "campaignTierCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_index",
+        "type": "uint256"
+      }
+    ],
+    "name": "campaignTiers",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fundAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "numberOfLaunches",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getCampaignTierToLaunch",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fundAmount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_campaignTierId",
+        "type": "uint256"
+      }
+    ],
+    "name": "removeCampaignTier",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_recordingOracle",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_reputationOracle",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_exchangeOracle",
+        "type": "address"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_recordingOracleFeePercentage",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_reputationOracleFeePercentage",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_exchangeOracleFeePercentage",
+        "type": "uint8"
+      }
+    ],
+    "name": "setCampaignData",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
