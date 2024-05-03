@@ -8,6 +8,7 @@ dotenv.config();
 const CAMPAIGN_EXCHANGES = ["binance", "bitfinex", "mexc"];
 
 async function main() {
+  const [owner] = await ethers.getSigners();
   const network = await ethers.provider.getNetwork();
   const networkData = NETWORKS[Number(network.chainId) as ChainId];
 
@@ -60,7 +61,7 @@ async function main() {
 
   console.log("Minting tokens...");
   const txResponse = await humanUSD.mint(
-    await humanUSD.getAddress(),
+    await owner.getAddress(),
     mintAmount,
     url,
     hash
@@ -82,6 +83,7 @@ async function main() {
 
   const escrow = await ethers.getContractAt("Escrow", escrowAddress);
   console.log("\n---------------- Escrow Data ----------------");
+  console.log("Escrow:", escrowAddress);
   console.log("Token:", await escrow.token());
   console.log("Balance:", await escrow.getBalance());
   console.log("Status:", await escrow.status());
