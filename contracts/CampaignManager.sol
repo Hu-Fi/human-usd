@@ -17,13 +17,9 @@ contract CampaignManager is
         public
         override campaignTiers;
 
-    constructor() {
-        _disableInitializers();
-    }
-
     function initialize() external payable initializer {
-        __Ownable_init(_msgSender());
-        __UUPSUpgradeable_init();
+        __Ownable_init_unchained();
+        __UUPSUpgradeable_init_unchained();
     }
 
     /**************** View Functions ****************/
@@ -74,6 +70,10 @@ contract CampaignManager is
         tierToLaunch.numberOfLaunches++;
         campaignTiers[tierIndexToLaunch] = tierToLaunch;
 
+        emit CampaignToLaunchReturned(
+            tierToLaunch.token,
+            tierToLaunch.fundAmount
+        );
         return (tierToLaunch.token, tierToLaunch.fundAmount);
     }
 
@@ -193,6 +193,8 @@ contract CampaignManager is
     ) internal override onlyOwner {}
 
     /**************** Events ****************/
+    event CampaignToLaunchReturned(address token, uint256 fundAmount);
+
     event CampaignDataUpdated(
         address recordingOracle,
         address reputationOracle,
