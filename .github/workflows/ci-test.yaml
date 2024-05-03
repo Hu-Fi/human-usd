@@ -1,0 +1,21 @@
+name: CI Test
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    branches:
+      - 'main'
+  workflow_dispatch:
+
+jobs:
+  ci-test:
+    name: CI Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm install --global yarn && yarn --ignore-scripts
+        name: Install dependencies
+      - run: yarn test
+        name: Run test

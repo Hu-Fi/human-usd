@@ -1,13 +1,32 @@
 {
-  "name": "hardhat-project",
+  "name": "human-usd",
+  "description": "Human USD - Stable coin with automated market making campaigns",
+  "license": "MIT",
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test"
   },
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@openzeppelin/contracts": "^5.0.2",
-    "@openzeppelin/contracts-upgradeable": "^5.0.2",
-    "hardhat": "^2.22.2"
+    "@human-protocol/core": "^2.1.4",
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.3",
+    "@nomicfoundation/hardhat-ethers": "^3.0.5",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.3",
+    "@openzeppelin/contracts": "^4.9.2",
+    "@openzeppelin/contracts-upgradeable": "^4.9.2",
+    "@openzeppelin/hardhat-upgrades": "^3.1.0",
+    "@typechain/ethers-v6": "^0.5.0",
+    "@typechain/hardhat": "^9.0.0",
+    "@types/mocha": ">=9.1.0",
+    "chai": "^4.2.0",
+    "ethers": "^6.12.1",
+    "hardhat": "^2.22.1",
+    "hardhat-dependency-compiler": "^1.1.4",
+    "hardhat-gas-reporter": "^1.0.8",
+    "solidity-coverage": "^0.8.1",
+    "ts-node": "^10.9.2",
+    "typechain": "^8.3.0",
+    "typescript": "^5.4.5"
   }
 }

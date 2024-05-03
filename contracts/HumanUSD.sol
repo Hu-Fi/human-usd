@@ -2,6 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -13,7 +15,7 @@ import "./interfaces/IEscrowFactory.sol";
 import "./interfaces/IHMToken.sol";
 import "./interfaces/IStaking.sol";
 
-contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable {
+contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable, UUPSUpgradeable {
     address public addressUSDT;
 
     IHMToken public hmToken;
@@ -25,10 +27,6 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable {
     uint256 public tokensRequiredForCampaign;
     uint256 public tokensRemainingForCampaign;
 
-    constructor() {
-        _disableInitializers();
-    }
-
     function initialize(
         address _addressUSDT,
         address _hmToken,
@@ -36,7 +34,7 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable {
         address _staking,
         uint256 _tokensRequiredForCampaign
     ) external payable virtual initializer {
-        __Ownable_init_unchained(_msgSender());
+        __Ownable_init_unchained();
         __ERC20_init_unchained("HumanUSD", "HUSD");
 
         __HumanUSD_init_unchained(
@@ -93,12 +91,14 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable {
 
         _mint(to, amount);
 
-        tokensRemainingForCampaign = tokensRemainingForCampaign + amount;
-        while (tokensRemainingForCampaign >= tokensRequiredForCampaign) {
-            _createCampaign();
-            tokensRemainingForCampaign =
-                tokensRemainingForCampaign -
-                tokensRequiredForCampaign;
+        if (campaignManager != ICampaignManager(address(0))) {
+            tokensRemainingForCampaign = tokensRemainingForCampaign + amount;
+            while (tokensRemainingForCampaign >= tokensRequiredForCampaign) {
+                _createCampaign();
+                tokensRemainingForCampaign =
+                    tokensRemainingForCampaign -
+                    tokensRequiredForCampaign;
+            }
         }
     }
 
@@ -147,7 +147,9 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable {
         );
 
         // Fund escrow
-        _safeTransferFrom(token, address(this), escrow, fundAmount);
+        _safeTransfer(token, escrow, fundAmount);
+
+        emit CampaignLaunched(lastCampaignId, token, fundAmount, escrow);
     }
 
     function _safeTransferFrom(
@@ -158,4 +160,17 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable {
     ) internal {
         SafeERC20.safeTransferFrom(IERC20(token), from, to, value);
     }
+
+    function _safeTransfer(address token, address to, uint256 value) internal {
+        SafeERC20.safeTransfer(IERC20(token), to, value);
+    }
+
+    function _authorizeUpgrade(address) internal override onlyOwner {}
+
+    event CampaignLaunched(
+        uint256 campaignId,
+        address token,
+        uint256 fundAmount,
+        address escrow
+    );
 }
