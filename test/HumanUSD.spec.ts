@@ -102,9 +102,7 @@ describe("HumanUSD", () => {
       await exchangeOracle.getAddress(),
       recordingOracleFee,
       reputationOracleFee,
-      exchangeOracleFee,
-      manifestURL,
-      manifestHash
+      exchangeOracleFee
     );
 
     // Add Campaign Tier
@@ -160,7 +158,7 @@ describe("HumanUSD", () => {
 
     const tokensSmallerThanRequired = BigInt(tokensRequiredForCampaign * 0.5);
     await usdt.approve(await humanUSD.getAddress(), tokensSmallerThanRequired);
-    await humanUSD.mint(alice.getAddress(), tokensSmallerThanRequired);
+    await humanUSD.mint(alice.getAddress(), tokensSmallerThanRequired, manifestURL, manifestHash);
 
     expect(await humanUSD.balanceOf(alice.getAddress())).to.equal(
       aliceBalanceBefore + tokensSmallerThanRequired
@@ -170,7 +168,7 @@ describe("HumanUSD", () => {
   it("should not be able to mint after reaching tokens required for campaign without staking hmtokens", async () => {
     await usdt.approve(await humanUSD.getAddress(), tokensRequiredForCampaign);
     await expect(
-      humanUSD.mint(alice.getAddress(), tokensRequiredForCampaign)
+      humanUSD.mint(alice.getAddress(), tokensRequiredForCampaign, manifestURL, manifestHash)
     ).to.be.revertedWith("Needs to stake HMT tokens to create an escrow.");
   });
 
@@ -196,7 +194,7 @@ describe("HumanUSD", () => {
     await usdt.approve(await humanUSD.getAddress(), tokensRequiredForCampaign);
     const txResponse = await humanUSD.mint(
       alice.getAddress(),
-      tokensRequiredForCampaign
+      tokensRequiredForCampaign, manifestURL, manifestHash
     );
     expect(txResponse)
       .to.emit(humanUSD, "CampaignLaunched")
@@ -235,7 +233,7 @@ describe("HumanUSD", () => {
     const aliceBalanceBefore = await humanUSD.balanceOf(alice.getAddress());
 
     await usdt.approve(await humanUSD.getAddress(), tokensRequiredForCampaign);
-    await humanUSD.mint(alice.getAddress(), tokensRequiredForCampaign);
+    await humanUSD.mint(alice.getAddress(), tokensRequiredForCampaign, manifestURL, manifestHash);
 
     expect(await humanUSD.balanceOf(alice.getAddress())).to.equal(
       aliceBalanceBefore + BigInt(tokensRequiredForCampaign)
@@ -250,7 +248,7 @@ describe("HumanUSD", () => {
     const aliceBalanceBefore = await humanUSD.balanceOf(alice.getAddress());
 
     await usdt.approve(await humanUSD.getAddress(), tokensRequiredForCampaign);
-    await humanUSD.mint(alice.getAddress(), tokensRequiredForCampaign);
+    await humanUSD.mint(alice.getAddress(), tokensRequiredForCampaign, manifestURL, manifestHash);
 
     expect(await humanUSD.balanceOf(alice.getAddress())).to.equal(
       aliceBalanceBefore + BigInt(tokensRequiredForCampaign)
