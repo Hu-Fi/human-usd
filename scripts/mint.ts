@@ -34,7 +34,7 @@ async function main() {
     requesterAddress: await humanUSD.getAddress(),
     exchangeName:
       CAMPAIGN_EXCHANGES[Math.floor(Math.random() * CAMPAIGN_EXCHANGES.length)],
-    token: networkData?.hmtAddress,
+    token: await humanUSD.symbol(),
     fundAmount: ethers
       .parseEther(process.env.FUND_AMOUNT || "0.000001")
       .toString(),
