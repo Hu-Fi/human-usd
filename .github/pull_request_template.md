@@ -6,7 +6,7 @@
 
 <!-- At a high level, what parts of the code did you change and why? -->
 
-## How test the changes
+## How to test the changes
 
 <!-- If there are any special testing requirements, add them here -->
 
