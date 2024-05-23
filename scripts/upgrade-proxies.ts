@@ -18,10 +18,7 @@ async function main() {
       campaignManagerAddress,
       CampaignManager
     );
-    const contract = await campaignManagerContract.deployed();
-    await ethers.provider.getTransactionReceipt(
-      contract.deployTransaction.hash
-    );
+    await campaignManagerContract.waitForDeployment();
 
     console.log(
       "CampaignManager Proxy Address: ",
@@ -41,10 +38,7 @@ async function main() {
       humanUSDAddress,
       HumanUSD
     );
-    const contract = await humanUSDContract.deployed();
-    await ethers.provider.getTransactionReceipt(
-      contract.deployTransaction.hash
-    );
+    await humanUSDContract.waitForDeployment();
 
     console.log(
       "HumanUSD Proxy Address: ",

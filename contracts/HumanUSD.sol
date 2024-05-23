@@ -92,6 +92,25 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable, UUPSUpgradeable {
         _mint(to, amount);
     }
 
+    function getCampaignTierToLaunch(
+        uint256 amount
+    ) external view returns (address, uint256) {
+        require(
+            tokensRemainingForCampaign + amount >= tokensRequiredForCampaign,
+            "Not enough tokens to launch a campaign"
+        );
+
+        require(
+            campaignManager != ICampaignManager(address(0)),
+            "Campaign manager not set"
+        );
+
+        (, address token, uint256 fundAmount) = campaignManager
+            .getCampaignTierToLaunch();
+
+        return (token, fundAmount);
+    }
+
     function mint(
         address to,
         uint256 amount,
@@ -102,7 +121,10 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable, UUPSUpgradeable {
 
         _mint(to, amount);
 
-        if (campaignManager != ICampaignManager(address(0))) {
+        if (
+            campaignManager != ICampaignManager(address(0)) &&
+            IStaking(staking).hasAvailableStake(address(this))
+        ) {
             tokensRemainingForCampaign = tokensRemainingForCampaign + amount;
             while (tokensRemainingForCampaign >= tokensRequiredForCampaign) {
                 _createCampaign(manifestURL, manifestHash);
@@ -117,8 +139,11 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable, UUPSUpgradeable {
         string memory manifestURL,
         string memory manifestHash
     ) internal {
-        (address token, uint256 fundAmount) = campaignManager
+        (, address token, uint256 fundAmount) = campaignManager
             .getCampaignTierToLaunch();
+
+        campaignManager.launchCampaignTier();
+
         (
             address recordingOracle,
             address reputationOracle,
@@ -129,7 +154,7 @@ contract HumanUSD is OwnableUpgradeable, ERC20Upgradeable, UUPSUpgradeable {
         ) = campaignManager.campaignData();
 
         if (IERC20(token).balanceOf(address(this)) < fundAmount) {
-            // Silently fail if we don't have enough tokens to fund the campaign
+            // Silently fail if we don"t have enough tokens to fund the campaign
             return;
         }
 

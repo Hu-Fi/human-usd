@@ -109,7 +109,7 @@
         "type": "uint256"
       }
     ],
-    "name": "CampaignTierRemoved",
+    "name": "CampaignTierLaunched",
     "type": "event"
   },
   {
@@ -117,18 +117,12 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": false,
         "internalType": "uint256",
-        "name": "fundAmount",
+        "name": "campaignTierId",
         "type": "uint256"
       }
     ],
-    "name": "CampaignToLaunchReturned",
+    "name": "CampaignTierRemoved",
     "type": "event"
   },
   {
@@ -279,6 +273,11 @@
     "name": "getCampaignTierToLaunch",
     "outputs": [
       {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "",
         "type": "address"
@@ -289,7 +288,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -297,6 +296,13 @@
     "name": "initialize",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "launchCampaignTier",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

@@ -165,11 +165,15 @@ describe("HumanUSD", () => {
     );
   });
 
-  it("should not be able to mint after reaching tokens required for campaign without staking hmtokens", async () => {
+  it("should be able to continue minting after reaching tokens required for campaign without staking hmtokens", async () => {
+    const aliceBalanceBefore = await humanUSD.balanceOf(alice.getAddress());
+    
     await usdt.approve(await humanUSD.getAddress(), tokensRequiredForCampaign);
-    await expect(
-      humanUSD.mint(alice.getAddress(), tokensRequiredForCampaign, manifestURL, manifestHash)
-    ).to.be.revertedWith("Needs to stake HMT tokens to create an escrow.");
+    await humanUSD.mint(alice.getAddress(), tokensRequiredForCampaign, manifestURL, manifestHash)
+
+    expect(await humanUSD.balanceOf(alice.getAddress())).to.equal(
+      aliceBalanceBefore + BigInt(tokensRequiredForCampaign)
+    );
   });
 
   it("should not be able to stake HMTokens from operator", async () => {
@@ -191,10 +195,16 @@ describe("HumanUSD", () => {
   it("should be able to mint with launching campaign", async () => {
     const aliceBalanceBefore = await humanUSD.balanceOf(alice.getAddress());
 
-    await usdt.approve(await humanUSD.getAddress(), tokensRequiredForCampaign);
+    const tokenAmountToMint = tokensRequiredForCampaign;
+
+    const campaignToLaunch = await humanUSD.getCampaignTierToLaunch(tokenAmountToMint);
+    expect(campaignToLaunch[0]).to.equal(await hmtoken.getAddress());
+    expect(campaignToLaunch[1].toString()).to.equal(fundAmount.toString());
+
+    await usdt.approve(await humanUSD.getAddress(), tokenAmountToMint);
     const txResponse = await humanUSD.mint(
       alice.getAddress(),
-      tokensRequiredForCampaign, manifestURL, manifestHash
+      tokenAmountToMint, manifestURL, manifestHash
     );
     expect(txResponse)
       .to.emit(humanUSD, "CampaignLaunched")
@@ -224,6 +234,27 @@ describe("HumanUSD", () => {
     expect(await humanUSD.balanceOf(alice.getAddress())).to.equal(
       aliceBalanceBefore + BigInt(tokensRequiredForCampaign)
     );
+    expect(await hmtoken.balanceOf(await humanUSD.getAddress())).to.equal(
+      ethers.parseEther("1")
+    );
+  });
+
+  it("should not launch the campaign with less amount minted", async () => {
+    const aliceBalanceBefore = await humanUSD.balanceOf(alice.getAddress());
+
+    const tokenAmountToMint = tokensRequiredForCampaign  / 2;
+
+    await expect(humanUSD.getCampaignTierToLaunch(
+      tokenAmountToMint
+    )).to.be.revertedWith("Not enough tokens to launch a campaign")
+
+    await usdt.approve(await humanUSD.getAddress(), tokenAmountToMint);
+    await humanUSD.mint(alice.getAddress(), tokenAmountToMint, manifestURL, manifestHash);
+
+    expect(await humanUSD.balanceOf(alice.getAddress())).to.equal(
+      aliceBalanceBefore + BigInt(tokenAmountToMint)
+    );
+    expect(await humanUSD.lastCampaignId()).to.equal(1);
     expect(await hmtoken.balanceOf(await humanUSD.getAddress())).to.equal(
       ethers.parseEther("1")
     );

@@ -102,6 +102,11 @@
     "name": "getCampaignTierToLaunch",
     "outputs": [
       {
+        "internalType": "uint256",
+        "name": "tierIndexToLaunch",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "token",
         "type": "address"
@@ -112,6 +117,13 @@
         "type": "uint256"
       }
     ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "launchCampaignTier",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },

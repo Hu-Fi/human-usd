@@ -4,7 +4,7 @@ import { ethers, upgrades } from "hardhat";
 import { CampaignManager } from "../typechain-types";
 import { Signer } from "ethers";
 
-describe("HumanUSD", () => {
+describe("CampaignManager", () => {
   let campaignManager: CampaignManager;
 
   let operator: Signer;
@@ -167,17 +167,24 @@ describe("HumanUSD", () => {
   });
 
   it("should return campaign to launch with round robin selection", async () => {
-    await expect(campaignManager.getCampaignTierToLaunch())
-      .to.emit(campaignManager, "CampaignToLaunchReturned")
-      .withArgs(await token1.getAddress(), tier1Amount.toString());
+    let campaignToLaunch = await campaignManager.getCampaignTierToLaunch();
+    expect(campaignToLaunch[0].toString()).to.equal("0");
+    expect(campaignToLaunch[1]).to.equal(await token1.getAddress());
+    expect(campaignToLaunch[2].toString()).to.equal(tier1Amount.toString());
 
-    await expect(campaignManager.getCampaignTierToLaunch())
-      .to.emit(campaignManager, "CampaignToLaunchReturned")
-      .withArgs(await token2.getAddress(), tier2Amount.toString());
+    await campaignManager.launchCampaignTier();
 
-    await expect(campaignManager.getCampaignTierToLaunch())
-      .to.emit(campaignManager, "CampaignToLaunchReturned")
-      .withArgs(await token1.getAddress(), tier1Amount.toString());
+    campaignToLaunch = await campaignManager.getCampaignTierToLaunch();
+    expect(campaignToLaunch[0].toString()).to.equal("1");
+    expect(campaignToLaunch[1]).to.equal(await token2.getAddress());
+    expect(campaignToLaunch[2].toString()).to.equal(tier2Amount.toString());
+
+    await campaignManager.launchCampaignTier();
+
+    campaignToLaunch = await campaignManager.getCampaignTierToLaunch();
+    expect(campaignToLaunch[0].toString()).to.equal("0");
+    expect(campaignToLaunch[1]).to.equal(await token1.getAddress());
+    expect(campaignToLaunch[2].toString()).to.equal(tier1Amount.toString());
   });
 
   it("should not be able to remove tier from operator", async () => {
@@ -201,12 +208,16 @@ describe("HumanUSD", () => {
   });
 
   it("should not include removed tier in round robin selection", async () => {
-    await expect(campaignManager.getCampaignTierToLaunch())
-      .to.emit(campaignManager, "CampaignToLaunchReturned")
-      .withArgs(await token2.getAddress(), tier2Amount.toString());
+    const campaignToLaunch = await campaignManager.getCampaignTierToLaunch();
+    expect(campaignToLaunch[0].toString()).to.equal("1");
+    expect(campaignToLaunch[1]).to.equal(await token2.getAddress());
+    expect(campaignToLaunch[2].toString()).to.equal(tier2Amount.toString());
 
-    await expect(campaignManager.getCampaignTierToLaunch())
-      .to.emit(campaignManager, "CampaignToLaunchReturned")
-      .withArgs(await token2.getAddress(), tier2Amount.toString());
+    await campaignManager.launchCampaignTier();
+
+    const campaignToLaunchNew = await campaignManager.getCampaignTierToLaunch();
+    expect(campaignToLaunchNew[0].toString()).to.equal("1");
+    expect(campaignToLaunchNew[1]).to.equal(await token2.getAddress());
+    expect(campaignToLaunchNew[2].toString()).to.equal(tier2Amount.toString());
   });
 });
