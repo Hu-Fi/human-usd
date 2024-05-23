@@ -62,7 +62,10 @@ interface ICampaignManager {
 
     function getCampaignTierToLaunch()
         external
-        returns (address token, uint256 fundAmount);
+        view
+        returns (uint256 tierIndexToLaunch, address token, uint256 fundAmount);
+
+    function launchCampaignTier() external;
 
     function setCampaignData(
         address _recordingOracle,

@@ -31,38 +31,21 @@ contract CampaignManager is
      */
     function getCampaignTierToLaunch()
         external
+        view
         override
-        returns (address, uint256)
+        returns (uint256, address, uint256)
     {
-        require(
-            campaignData.recordingOracle != address(0),
-            "CampaignManager: Invalid campaign data"
-        );
-        require(
-            campaignTierCount > 0,
-            "CampaignManager: No campaign tier to launch"
-        );
+        uint256 tierIndexToLaunch = _getCampaignTierToLaunch();
 
-        uint256 minNumberOfLaunches = type(uint256).max;
-        uint256 tierIndexToLaunch = type(uint256).max;
+        ICampaignManager.CampaignTier memory tierToLaunch = campaignTiers[
+            tierIndexToLaunch
+        ];
 
-        for (uint256 i = 0; i < campaignTierCount; i++) {
-            ICampaignManager.CampaignTier memory _campaignTier = campaignTiers[
-                i
-            ];
-            if (
-                _campaignTier.token != address(0) &&
-                _campaignTier.numberOfLaunches < minNumberOfLaunches
-            ) {
-                minNumberOfLaunches = _campaignTier.numberOfLaunches;
-                tierIndexToLaunch = i;
-            }
-        }
+        return (tierIndexToLaunch, tierToLaunch.token, tierToLaunch.fundAmount);
+    }
 
-        require(
-            tierIndexToLaunch != type(uint256).max,
-            "CampaignManager: No campaign tier to launch"
-        );
+    function launchCampaignTier() external override {
+        uint256 tierIndexToLaunch = _getCampaignTierToLaunch();
 
         ICampaignManager.CampaignTier memory tierToLaunch = campaignTiers[
             tierIndexToLaunch
@@ -70,11 +53,7 @@ contract CampaignManager is
         tierToLaunch.numberOfLaunches++;
         campaignTiers[tierIndexToLaunch] = tierToLaunch;
 
-        emit CampaignToLaunchReturned(
-            tierToLaunch.token,
-            tierToLaunch.fundAmount
-        );
-        return (tierToLaunch.token, tierToLaunch.fundAmount);
+        emit CampaignTierLaunched(tierIndexToLaunch);
     }
 
     /**************** Restricted Functions ****************/
@@ -177,12 +156,48 @@ contract CampaignManager is
         emit CampaignTierRemoved(_campaignTierId);
     }
 
+    /**************** Internal Functions ****************/
+
+    function _getCampaignTierToLaunch() internal view returns (uint256) {
+        require(
+            campaignData.recordingOracle != address(0),
+            "CampaignManager: Invalid campaign data"
+        );
+        require(
+            campaignTierCount > 0,
+            "CampaignManager: No campaign tier to launch"
+        );
+
+        uint256 minNumberOfLaunches = type(uint256).max;
+        uint256 tierIndexToLaunch = type(uint256).max;
+
+        for (uint256 i = 0; i < campaignTierCount; i++) {
+            ICampaignManager.CampaignTier memory _campaignTier = campaignTiers[
+                i
+            ];
+            if (
+                _campaignTier.token != address(0) &&
+                _campaignTier.numberOfLaunches < minNumberOfLaunches
+            ) {
+                minNumberOfLaunches = _campaignTier.numberOfLaunches;
+                tierIndexToLaunch = i;
+            }
+        }
+
+        require(
+            tierIndexToLaunch != type(uint256).max,
+            "CampaignManager: No campaign tier to launch"
+        );
+
+        return tierIndexToLaunch;
+    }
+
     function _authorizeUpgrade(
         address newImplementation
     ) internal override onlyOwner {}
 
     /**************** Events ****************/
-    event CampaignToLaunchReturned(address token, uint256 fundAmount);
+    event CampaignTierLaunched(uint256 campaignTierId);
 
     event CampaignDataUpdated(
         address recordingOracle,
