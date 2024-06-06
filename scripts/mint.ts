@@ -11,6 +11,7 @@ async function main() {
   const [owner] = await ethers.getSigners();
   const network = await ethers.provider.getNetwork();
   const networkData = NETWORKS[Number(network.chainId) as ChainId];
+  const mintOnly = process.env.MINT_ONLY === "true";
 
   if (!process.env.HUMAN_USD_ADDRESS) {
     throw new Error("HumanUSD is not found.");
@@ -25,30 +26,37 @@ async function main() {
     throw new Error("HMT is not found.");
   }
 
-  const startBlock = Math.floor(new Date().getTime() / 1000);
-  const duration = +(process.env.CAMPAIGN_DURATION || "2592000");
-  const endBlock = startBlock + duration;
+  let url, hash;
+  if (!mintOnly) {
+    const startBlock = Math.floor(new Date().getTime() / 1000);
+    const duration = +(process.env.CAMPAIGN_DURATION || "2592000");
+    const endBlock = startBlock + duration;
 
-  const manifest: Manifest = {
-    chainId: Number(network.chainId),
-    requesterAddress: await humanUSD.getAddress(),
-    exchangeName:
-      CAMPAIGN_EXCHANGES[Math.floor(Math.random() * CAMPAIGN_EXCHANGES.length)],
-    token: await humanUSD.symbol(),
-    fundAmount: ethers
-      .parseEther(process.env.FUND_AMOUNT || "0.000001")
-      .toString(),
-    startBlock,
-    endBlock,
-    duration,
-    type: "MARKET_MAKING",
-  };
+    const manifest: Manifest = {
+      chainId: Number(network.chainId),
+      requesterAddress: await humanUSD.getAddress(),
+      exchangeName:
+        CAMPAIGN_EXCHANGES[
+          Math.floor(Math.random() * CAMPAIGN_EXCHANGES.length)
+        ],
+      token: await humanUSD.symbol(),
+      fundAmount: ethers
+        .parseEther(process.env.FUND_AMOUNT || "0.000001")
+        .toString(),
+      startBlock,
+      endBlock,
+      duration,
+      type: "MARKET_MAKING",
+    };
 
-  console.log("Manifest:", manifest);
+    console.log("Manifest:", manifest);
 
-  console.log("Uploading manifest...");
-  const { url, hash } = await uploadManifest(manifest);
-  console.log("Manifest uploaded:", url);
+    console.log("Uploading manifest...");
+    const manifestRes = await uploadManifest(manifest);
+    url = manifestRes.url;
+    hash = manifestRes.hash;
+    console.log("Manifest uploaded:", url);
+  }
 
   const mintAmount = ethers.parseEther(process.env.MINT_AMOUNT || "1");
 
@@ -60,33 +68,48 @@ async function main() {
   await usdt.approve(await humanUSD.getAddress(), mintAmount);
 
   console.log("Minting tokens...");
-  const txResponse = await humanUSD.mint(
-    await owner.getAddress(),
-    mintAmount,
-    url,
-    hash
-  );
+
+  let txResponse;
+  if (mintOnly) {
+    txResponse = await humanUSD["mint(address,uint256)"](
+      await owner.getAddress(),
+      mintAmount
+    );
+  } else {
+    if (!url || !hash) {
+      throw new Error("Manifest not uploaded");
+    }
+
+    txResponse = await humanUSD["mint(address,uint256,string,string)"](
+      await owner.getAddress(),
+      mintAmount,
+      url,
+      hash
+    );
+  }
 
   console.log("Tokens minted");
 
-  console.log("Checking the market making campaign...");
-  const txReceipt = await txResponse.wait();
-  let escrowAddress;
-  for (const event of txReceipt?.logs ?? []) {
-    if (
-      (event as any).fragment &&
-      (event as any).fragment.name === "CampaignLaunched"
-    ) {
-      escrowAddress = (event as any).args?.[3];
+  if (!mintOnly) {
+    console.log("Checking the market making campaign...");
+    const txReceipt = await txResponse.wait();
+    let escrowAddress;
+    for (const event of txReceipt?.logs ?? []) {
+      if (
+        (event as any).fragment &&
+        (event as any).fragment.name === "CampaignLaunched"
+      ) {
+        escrowAddress = (event as any).args?.[3];
+      }
     }
-  }
 
-  const escrow = await ethers.getContractAt("Escrow", escrowAddress);
-  console.log("\n---------------- Escrow Data ----------------");
-  console.log("Escrow:", escrowAddress);
-  console.log("Token:", await escrow.token());
-  console.log("Balance:", await escrow.getBalance());
-  console.log("Status:", await escrow.status());
+    const escrow = await ethers.getContractAt("Escrow", escrowAddress);
+    console.log("\n---------------- Escrow Data ----------------");
+    console.log("Escrow:", escrowAddress);
+    console.log("Token:", await escrow.token());
+    console.log("Balance:", await escrow.getBalance());
+    console.log("Status:", await escrow.status());
+  }
 }
 
 main().catch((error) => {

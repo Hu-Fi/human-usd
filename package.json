@@ -11,7 +11,8 @@
     "upgrade:proxy": "hardhat run scripts/upgrade-proxies.ts",
     "upgrade:local": "yarn upgrade:proxy --network localhost",
     "mint": "hardhat run scripts/mint.ts",
-    "mint:local": "MINT_AMOUNT=100 yarn mint --network localhost"
+    "mint:local": "MINT_AMOUNT=100 yarn mint --network localhost",
+    "mint-only": "MINT_ONLY=true yarn mint"
   },
   "devDependencies": {
     "@human-protocol/core": "^2.1.4",
