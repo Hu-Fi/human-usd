@@ -18,6 +18,14 @@ Campaign manifest details are off-chain data, so that must be created off-chain,
 
 ## Deployed Contracts
 
+- Sepolia
+
+    Contract | Address
+    -- | --
+    Mock USDT | [0x6A3267e048B80FC2Fbd52510508c1eb884F0fDb1](https://sepolia.etherscan.io/token/0x6A3267e048B80FC2Fbd52510508c1eb884F0fDb1)
+    HumanUSD | [0xF15D41e06FE329427c643Ed2203F14C409cb4b85](https://sepolia.etherscan.io/address/0xF15D41e06FE329427c643Ed2203F14C409cb4b85)
+    CampaignManager | [0x571E2443D8E74b531cd92F6310437F71Dc378fF6](https://sepolia.etherscan.io/address/0x571E2443D8E74b531cd92F6310437F71Dc378fF6)
+
 - Polygon Amoy
 
     Contract | Address
